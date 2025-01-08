@@ -42,6 +42,10 @@ export class MapWidget {
 
     var geojson;
 
+    function generateCountyUrl(props) {
+      return `https://irserver2.eku.edu/reports/sas/counties/data/${props.name}%20Kentucky.html`;
+    }
+
     function getColor(d) {
       return d > 1000
         ? "#800026"
@@ -118,15 +122,21 @@ export class MapWidget {
       info.update();
     }
 
-    function zoomToFeature(e) {
-      map.fitBounds(e.target.getBounds());
+    // function zoomToFeature(e) {
+    //   map.fitBounds(e.target.getBounds());
+    // }
+
+    function openCountyUrl(e) {
+      window
+        .open(generateCountyUrl(e.target.feature.properties), "_blank")
+        .focus();
     }
 
     function onEachFeature(feature, layer) {
       layer.on({
         mouseover: highlightFeature,
         mouseout: resetHighlight,
-        click: zoomToFeature,
+        click: openCountyUrl,
       });
     }
 
@@ -164,8 +174,8 @@ export class MapWidget {
 
     const enrollment = {
       serviceRegion: {
+        rowClass: "text-bluegrass fw-bold mb-2",
         amount: inState - nonServiceRegion,
-        rowClass: "text-bluegrass mb-2",
         label: "Service region",
       },
       nonServiceRegion: {
@@ -189,7 +199,7 @@ export class MapWidget {
       ([a], [b]) => rowOrder.indexOf(a) - rowOrder.indexOf(b)
     );
 
-    const topRow = `<div class="mb-2 fs-4 heading">EKU Enrollment</div>`;
+    const topRow = `<div class="mb-3 fs-4 heading">EKU Current Enrollment</div>`;
 
     const enrollmentRows = enrollmentEntries
       .map(([, { rowClass = "mb-2", amount, label }]) =>
@@ -202,7 +212,7 @@ export class MapWidget {
         ? generateRow(
             `${props.name}:`,
             getDensity(props).toLocaleString(),
-            isServiceRegionCounty(props) ? "text-bluegrass" : ""
+            isServiceRegionCounty(props) ? "text-bluegrass fw-bold" : ""
           )
         : generateRow("Hover over a county:", "?", "");
     }
