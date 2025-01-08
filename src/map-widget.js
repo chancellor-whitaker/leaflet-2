@@ -4,7 +4,9 @@ import * as L from "leaflet";
 import { kyCounties } from "./ky-counties";
 
 export class MapWidget {
-  constructor(domNode, densities) {
+  constructor(domNode, densities, file) {
+    const { asOfDate_str = "", term_desc = "" } = file;
+
     const serviceRegion = [
       "Bell",
       "Boyle",
@@ -199,7 +201,7 @@ export class MapWidget {
       ([a], [b]) => rowOrder.indexOf(a) - rowOrder.indexOf(b)
     );
 
-    const topRow = `<div class="mb-3 fs-4 heading">EKU Current Enrollment</div>`;
+    const topRow = `<div class="fs-4 mb-2">EKU ${term_desc} Enrollment</div><div class="mb-3">As of: ${asOfDate_str}</div>`;
 
     const enrollmentRows = enrollmentEntries
       .map(([, { rowClass = "mb-2", amount, label }]) =>
