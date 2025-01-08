@@ -5,12 +5,43 @@ import { kyCounties } from "./ky-counties";
 
 export class MapWidget {
   constructor(domNode, densities) {
+    const serviceRegion = [
+      "Bell",
+      "Boyle",
+      "Casey",
+      "Clay",
+      "Estill",
+      "Garrard",
+      "Harlan",
+      "Jackson",
+      "Knox",
+      "Laurel",
+      "Lee",
+      "Leslie",
+      "Lincoln",
+      "McCreary",
+      "Madison",
+      "Owsley",
+      "Perry",
+      "Powell",
+      "Pulaski",
+      "Rockcastle",
+      "Wayne",
+      "Whitley",
+    ];
+
+    const missing = "-Missing-";
+
     var legend = L.control({ position: "bottomright" });
 
     // lebanon junction coordinates
-    const geographicCenter = [37.834, -85.7293];
+    // const geographicCenter = [37.834, -85.7293];
 
-    var map = L.map(domNode).setView(geographicCenter, 8);
+    // 36° 30 N to 39° 09′ N (Latitude) and 81° 58′ W to 89° 34' W (Longitude)
+    var map = L.map(domNode).fitBounds([
+      [36.3, -89.34],
+      [39.09, -81.58],
+    ]);
 
     var info = L.control();
 
@@ -82,6 +113,87 @@ export class MapWidget {
       });
     }
 
+    function sum(numbers) {
+      return numbers.reduce((accumulator, currentValue) => {
+        return accumulator + currentValue;
+      }, 0);
+    }
+
+    function sumCounties(exclusions = new Set([missing])) {
+      return sum(
+        Object.entries(densities)
+          .filter(([county]) => !exclusions.has(county))
+          .map(([, amount]) => amount)
+      );
+    }
+
+    function generateRow(
+      name,
+      value,
+      rowClass = "mb-2",
+      nameClass = "fw-bold"
+    ) {
+      function combineClasses(...classes) {
+        return classes.filter((string) => string).join(" ");
+      }
+
+      const rowClasses = combineClasses("d-flex", rowClass);
+
+      const nameClasses = combineClasses("me-auto", "pe-2", nameClass);
+
+      return `<div class="${rowClasses}"><div class="${nameClasses}">${name}</div><div>${value}</div></div>`;
+    }
+
+    const nonServiceRegion = sumCounties(new Set([missing, ...serviceRegion]));
+
+    const all = sumCounties(new Set());
+
+    const inState = sumCounties();
+
+    const enrollment = {
+      serviceRegion: {
+        amount: inState - nonServiceRegion,
+        label: "Service region",
+      },
+      nonServiceRegion: {
+        label: "Non-service region",
+        amount: nonServiceRegion,
+      },
+      outOfState: { amount: all - inState, label: "Out-of-state" },
+      inState: { label: "In-state", amount: inState },
+      all: { label: "All", amount: all },
+    };
+
+    const rowOrder = [
+      "all",
+      "inState",
+      "serviceRegion",
+      "nonServiceRegion",
+      "outOfState",
+    ];
+
+    const enrollmentEntries = Object.entries(enrollment).sort(
+      ([a], [b]) => rowOrder.indexOf(a) - rowOrder.indexOf(b)
+    );
+
+    const topRow = `<h4 class="mb-2 fs-6">EKU Enrollment</h4>`;
+
+    const enrollmentRows = enrollmentEntries
+      .map(([, { amount, label }]) =>
+        generateRow(`${label}:`, amount.toLocaleString())
+      )
+      .join("");
+
+    function generateCountyRow(props) {
+      return props
+        ? generateRow(`${props.name}:`, getDensity(props).toLocaleString(), "")
+        : generateRow("Hover over a county", "", "", "");
+    }
+
+    function generateInnerHTML(props) {
+      return topRow + enrollmentRows + generateCountyRow(props);
+    }
+
     geojson = L.geoJson(kyCounties, { onEachFeature, style }).addTo(map);
 
     info.onAdd = function () {
@@ -92,15 +204,7 @@ export class MapWidget {
 
     // method that we will use to update the control based on feature properties passed
     info.update = function (props) {
-      this._div.innerHTML =
-        "<h4>EKU Enrollment Density</h4>" +
-        (props
-          ? "<b>" +
-            props.name +
-            "</b><br />" +
-            getDensity(props) +
-            " people / mi<sup>2</sup>"
-          : "Hover over a county");
+      this._div.innerHTML = generateInnerHTML(props);
     };
 
     legend.onAdd = function () {

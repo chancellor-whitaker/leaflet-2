@@ -1,5 +1,6 @@
 import { use } from "react";
 
+import { useWindowSize } from "./useWindowSize";
 import Map from "./Map";
 
 const url =
@@ -9,8 +10,14 @@ const promise = fetch(url).then((response) => response.json());
 
 const columns = { groupBy: "county", sum: "Current" };
 
+// color coordinate service region & non-service region
+// how to include current term?
+// need to get data from original source
+
 export default function App() {
   const data = use(promise);
+
+  const { height, width } = useWindowSize();
 
   const calculateDensities = () => {
     const lookup = {};
@@ -30,7 +37,5 @@ export default function App() {
 
   const densities = calculateDensities();
 
-  console.log(densities);
-
-  return <Map densities={densities}></Map>;
+  return <Map densities={densities} key={width + height}></Map>;
 }
