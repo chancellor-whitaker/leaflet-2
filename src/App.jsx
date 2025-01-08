@@ -10,9 +10,10 @@ const promise = fetch(url).then((response) => response.json());
 
 const columns = { groupBy: "county", sum: "Current" };
 
-// color coordinate service region & non-service region
 // how to include current term?
 // need to get data from original source
+// remember clicking on option opens county page
+// remove current click handler
 
 export default function App() {
   const data = use(promise);

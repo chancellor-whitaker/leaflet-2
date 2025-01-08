@@ -30,18 +30,13 @@ export class MapWidget {
       "Whitley",
     ];
 
+    const serviceRegionSet = new Set(serviceRegion);
+
     const missing = "-Missing-";
 
     var legend = L.control({ position: "bottomright" });
 
-    // lebanon junction coordinates
-    // const geographicCenter = [37.834, -85.7293];
-
-    // 36° 30 N to 39° 09′ N (Latitude) and 81° 58′ W to 89° 34' W (Longitude)
-    var map = L.map(domNode).fitBounds([
-      [36.3, -89.34],
-      [39.09, -81.58],
-    ]);
+    var map = L.map(domNode);
 
     var info = L.control();
 
@@ -69,14 +64,28 @@ export class MapWidget {
       return densities[props.name];
     }
 
+    function isServiceRegionCounty(properties) {
+      return serviceRegionSet.has(properties.name);
+    }
+
     function style(feature) {
+      const serviceRegionBoolean = isServiceRegionCounty(feature.properties);
+
+      const fillColor = getColor(getDensity(feature.properties));
+
+      const color = serviceRegionBoolean ? "#009681" : "white";
+
+      const weight = serviceRegionBoolean ? 3 : 2;
+
+      const dashArray = serviceRegionBoolean ? 0 : 3;
+
       return {
-        fillColor: getColor(getDensity(feature.properties)),
         fillOpacity: 0.7,
-        color: "white",
-        dashArray: "3",
         opacity: 1,
-        weight: 2,
+        dashArray,
+        fillColor,
+        weight,
+        color,
       };
     }
 
@@ -96,7 +105,15 @@ export class MapWidget {
     }
 
     function resetHighlight(e) {
-      geojson.resetStyle(e.target);
+      var layer = e.target;
+
+      var serviceRegionBoolean = isServiceRegionCounty(
+        layer.feature.properties
+      );
+
+      geojson.resetStyle(layer);
+
+      if (!serviceRegionBoolean) layer.bringToBack();
 
       info.update();
     }
@@ -127,17 +144,12 @@ export class MapWidget {
       );
     }
 
-    function generateRow(
-      name,
-      value,
-      rowClass = "mb-2",
-      nameClass = "fw-bold"
-    ) {
+    function generateRow(name, value, rowClass = "mb-2", nameClass = "") {
       function combineClasses(...classes) {
         return classes.filter((string) => string).join(" ");
       }
 
-      const rowClasses = combineClasses("d-flex", rowClass);
+      const rowClasses = combineClasses("d-flex", "fs-5", rowClass);
 
       const nameClasses = combineClasses("me-auto", "pe-2", nameClass);
 
@@ -153,6 +165,7 @@ export class MapWidget {
     const enrollment = {
       serviceRegion: {
         amount: inState - nonServiceRegion,
+        rowClass: "text-bluegrass mb-2",
         label: "Service region",
       },
       nonServiceRegion: {
@@ -167,32 +180,46 @@ export class MapWidget {
     const rowOrder = [
       "all",
       "inState",
+      "outOfState",
       "serviceRegion",
       "nonServiceRegion",
-      "outOfState",
     ];
 
     const enrollmentEntries = Object.entries(enrollment).sort(
       ([a], [b]) => rowOrder.indexOf(a) - rowOrder.indexOf(b)
     );
 
-    const topRow = `<h4 class="mb-2 fs-6">EKU Enrollment</h4>`;
+    const topRow = `<div class="mb-2 fs-4 heading">EKU Enrollment</div>`;
 
     const enrollmentRows = enrollmentEntries
-      .map(([, { amount, label }]) =>
-        generateRow(`${label}:`, amount.toLocaleString())
+      .map(([, { rowClass = "mb-2", amount, label }]) =>
+        generateRow(`${label}:`, amount.toLocaleString(), rowClass)
       )
       .join("");
 
     function generateCountyRow(props) {
       return props
-        ? generateRow(`${props.name}:`, getDensity(props).toLocaleString(), "")
-        : generateRow("Hover over a county", "", "", "");
+        ? generateRow(
+            `${props.name}:`,
+            getDensity(props).toLocaleString(),
+            isServiceRegionCounty(props) ? "text-bluegrass" : ""
+          )
+        : generateRow("Hover over a county:", "?", "");
     }
 
     function generateInnerHTML(props) {
       return topRow + enrollmentRows + generateCountyRow(props);
     }
+
+    function quantifyBoolean(boolean) {
+      return boolean ? 1 : 0;
+    }
+
+    kyCounties.features.sort(
+      ({ properties: a }, { properties: b }) =>
+        quantifyBoolean(isServiceRegionCounty(a)) -
+        quantifyBoolean(isServiceRegionCounty(b))
+    );
 
     geojson = L.geoJson(kyCounties, { onEachFeature, style }).addTo(map);
 
@@ -223,6 +250,15 @@ export class MapWidget {
 
       return div;
     };
+
+    geojson.eachLayer(function (layer) {
+      layer.bindTooltip(layer.feature.properties.name, {
+        direction: "center",
+        permanent: true,
+      });
+    });
+
+    map.fitBounds(geojson.getBounds());
 
     L.tileLayer("https://tile.openstreetmap.org/{z}/{x}/{y}.png", {
       attribution:

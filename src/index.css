@@ -1,5 +1,5 @@
 .info {
-  padding: 6px 8px;
+  padding: 10px 8px;
   font: 14px/16px Arial, Helvetica, sans-serif;
   background: white;
   background: rgba(255, 255, 255, 0.8);
@@ -7,7 +7,7 @@
   border-radius: 5px;
 }
 
-.info h4 {
+.info .heading {
   margin: 0 0 5px;
   color: #777;
 }
@@ -49,6 +49,34 @@ body {
   font-weight: 700 !important;
 }
 
+.fs-4 {
+  font-size: calc(1.275rem + 0.3vw) !important;
+}
+
+@media (min-width: 1200px) {
+  .fs-4 {
+    font-size: 1.5rem !important;
+  }
+}
+
+.fs-5 {
+  font-size: 1.25rem !important;
+}
+
 .fs-6 {
   font-size: 1rem !important;
 }
+
+.leaflet-tooltip {
+  background-color: transparent !important;
+  border: transparent !important;
+  box-shadow: none !important;
+}
+
+.text-bluegrass {
+  color: #009681 !important;
+}
+
+/* .mb-3 {
+  margin-bottom: 1rem !important;
+} */
