@@ -31,6 +31,10 @@
   box-shadow: none !important;
 }
 
+.hide-leaflet-tooltips .leaflet-tooltip {
+  display: none;
+}
+
 .text-bluegrass {
   color: #009681 !important;
 }
