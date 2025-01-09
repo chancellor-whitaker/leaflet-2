@@ -1,6 +1,6 @@
 import { useEffect, useRef } from "react";
 
-import { MapWidget } from "./map-widget.js";
+import { MapWidget } from "../assets/map-widget";
 
 export default function Map({ densities, file }) {
   const containerRef = useRef(null);
