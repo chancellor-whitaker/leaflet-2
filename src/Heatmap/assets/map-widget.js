@@ -210,7 +210,7 @@ export class MapWidget {
 
     const enrollmentRows = enrollmentEntries
       .map(([, { rowClass = "mb-2", amount, label }]) =>
-        generateRow(`${label}:`, amount.toLocaleString(), rowClass)
+        generateRow(`${label}:`, amount?.toLocaleString(), rowClass)
       )
       .join("");
 
@@ -218,7 +218,7 @@ export class MapWidget {
       return props
         ? generateRow(
             `${props.name}:`,
-            getDensity(props).toLocaleString(),
+            getDensity(props)?.toLocaleString(),
             isServiceRegionCounty(props) ? "text-bluegrass fw-bold" : ""
           )
         : generateRow("Hover over a county:", "?", "");
