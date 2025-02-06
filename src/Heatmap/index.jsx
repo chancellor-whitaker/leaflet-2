@@ -32,7 +32,9 @@ export default function Heatmap() {
 
   const dataFulfilled = usePromise(dataPromise);
 
-  const data = dataFulfilled ? dataFulfilled : [];
+  const data = dataFulfilled
+    ? dataFulfilled.filter(({ program_no }) => `${program_no}` === "1")
+    : [];
 
   useWindowSize();
 

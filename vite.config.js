@@ -1,17 +1,21 @@
+import { globalConst } from "vite-plugin-global-const";
 import react from "@vitejs/plugin-react";
 import { defineConfig } from "vite";
 
-// const outDir = "Y:/Reports/DataPage2";
+const outDir = "Y:/Reports/serviceregion";
 
-// const base = "";
+const base = "";
 
-const base = "/static";
-
-const outDir = base.substring(1);
+const wrapperUrl = "https://irserver2.eku.edu/libraries/remote/wrapper.cjs";
 
 // https://vite.dev/config/
 export default defineConfig({
-  plugins: [react()],
-  build: { outDir },
+  plugins: [
+    react(),
+    globalConst({
+      wrapperUrl,
+    }),
+  ],
+  build: { copyPublicDir: false, emptyOutDir: false, outDir },
   base,
 });
